@@ -41,8 +41,10 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
         save_dir=save_meta_dir,
         file_prefix=request.id,
         timestamp=timestamp,
+        suffix="_baler",
         extension="json"
     )
+    
     response_data = BalerResponseData(
         id=request.id,
         production=line,

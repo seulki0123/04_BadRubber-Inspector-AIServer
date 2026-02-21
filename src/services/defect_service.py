@@ -106,6 +106,7 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
         save_dir=save_meta_dir,
         file_prefix=request.id,
         timestamp=timestamp,
+        suffix="_defect",
         extension="json"
     )
     response_data = DefectResponseData(
