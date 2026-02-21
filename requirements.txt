@@ -1,0 +1,10 @@
+fastapi==0.129.0
+uvicorn==0.30.0
+pydantic==2.12.0
+ultralytics==8.4.14
+tqdm
+scipy
+opencv-python
+thop
+ftfy
+regex
