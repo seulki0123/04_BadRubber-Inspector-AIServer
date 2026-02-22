@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from typing import Literal
 
 import cv2
 from fastapi import APIRouter, Request
@@ -31,6 +32,7 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
     grade = config["grade"]
     save_meta_dir = config["save_meta_dir"]
     save_image_dir = config["save_image_dir"]
+    mode: Literal["segment", "anomaly"] = config["return_mode"]
 
     os.makedirs(save_image_dir, exist_ok=True)
 
@@ -65,24 +67,50 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
     for item, batch_item in zip(image_items, results):
         detections = []
 
-        for region_segmentations in batch_item.segmentation:
-            for seg in region_segmentations:
+        if mode == "segment":
+
+            for region_segmentations in batch_item.segmentation:
+                for seg in region_segmentations:
+                    detections.append(
+                        DetectionItem(
+                            class_id=seg.class_id,
+                            class_name=seg.class_name,
+                            confidence=seg.confidence,
+                            bbox=list(seg.bboxes_xyxy)
+                        )
+                    )
+
+        elif mode == "anomaly":
+
+            anomaly_regions = batch_item.anomaly.regions
+            anomaly_cls_regions = batch_item.anomaly_cls.regions
+
+            if len(anomaly_regions) != len(anomaly_cls_regions):
+                raise ValueError("Anomaly region/classification mismatch")
+
+            for region, cls in zip(anomaly_regions, anomaly_cls_regions):
+                if cls.is_pass:
+                    continue
                 detections.append(
                     DetectionItem(
-                        class_id=seg.class_id,
-                        class_name=seg.class_name,
-                        confidence=seg.confidence,
-                        bbox=list(seg.bboxes_xyxy)
+                        class_id=cls.class_id,
+                        class_name=cls.class_name,
+                        confidence=cls.confidence,
+                        bbox=list(region.bboxes_xyxy)
                     )
                 )
+
+        else:
+            raise ValueError(f"Unsupported mode: {mode}")
 
         detection_count = len(detections)
         total_detection_count += detection_count
 
         if detection_count > 0:
+            original_filename = os.path.splitext(os.path.basename(item["image_path"]))[0]
             save_image_path = get_save_path(
                 save_dir=save_image_dir,
-                file_prefix=request.id,
+                file_prefix=f"{request.id}_{original_filename}",
                 timestamp=timestamp,
                 extension="jpg"
             )
@@ -101,7 +129,7 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
             )
         )
 
-    # 5. create response data (timestamp는 util에서 생성)
+    # 5. create response data
     meta_path = get_save_path(
         save_dir=save_meta_dir,
         file_prefix=request.id,
