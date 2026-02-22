@@ -25,7 +25,7 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
     config = fastapi_request.app.state.config
     line = config["line"]
     grade = config["grade"]
-    save_meta_dir = config["save_meta_dir"]
+    save_tmp_dir = config["save_tmp_dir"]
 
     # 2. classify baler
     side1 = request.images["side1"]
@@ -38,10 +38,8 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
 
     # 3. create response data
     meta_path = get_save_path(
-        save_dir=save_meta_dir,
+        save_dir=save_tmp_dir,
         file_prefix=request.id,
-        timestamp=timestamp,
-        suffix="_baler",
         extension="json"
     )
     

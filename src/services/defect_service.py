@@ -13,7 +13,7 @@ from ..schemas.responses.defect import (
     ImageResult,
     DetectionItem
 )
-from ..utils import get_save_path, save_metadata
+from ..utils import get_save_path, save_metadata, pop_baler_from_tmp
 
 
 defect_router = APIRouter()
@@ -30,11 +30,17 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
     config = fastapi_request.app.state.config
     line = config["line"]
     grade = config["grade"]
+    save_tmp_dir = config["save_tmp_dir"]
     save_meta_dir = config["save_meta_dir"]
     save_image_dir = config["save_image_dir"]
     mode: Literal["segment", "anomaly"] = config["return_mode"]
 
     os.makedirs(save_image_dir, exist_ok=True)
+
+    # 2. pop baler from tmp
+    baler = pop_baler_from_tmp(save_tmp_dir, request.id)
+    if baler is None:
+        print(f"[Warning] baler not found: {request.id}")
 
     # 2. create image items
     image_items = []
@@ -141,6 +147,7 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
         id=request.id,
         production=line,
         grade=grade,
+        baler=baler,
         timestamp=timestamp,
         images=image_results,
         total_detection_count=total_detection_count,

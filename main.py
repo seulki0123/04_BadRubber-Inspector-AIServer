@@ -5,6 +5,7 @@ app = FastAPI(title="Inspector AI Server")
 
 config = load_config()
 app.state.config = config
+app.state.config["save_tmp_dir"] = "./tmp"
 
 app.include_router(baler_router, prefix="/api") 
 app.include_router(defect_router, prefix="/api")

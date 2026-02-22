@@ -38,6 +38,7 @@ class DefectResponseData(BaseModel):
     id: str
     production: str
     grade: str
+    baler: Optional[int] = None
     timestamp: str
     images: List[ImageResult]
     total_detection_count: int
