@@ -1,16 +1,26 @@
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, field_validator
 from typing import Dict, Optional
 from .base import SideModel
 
 
 class DefectRequestModel(BaseModel):
     id: str
-    baler: Optional[int] = None
+    baler: Optional[str] = None
     images: Dict[str, SideModel]
 
     model_config = {
         "extra": "forbid"
     }
+
+    @field_validator("baler")
+    @classmethod
+    def validate_baler(cls, v):
+        if v is None:
+            return v
+        v = v.strip()
+        if not v:
+            raise ValueError("baler cannot be empty")
+        return v
 
     @model_validator(mode="after")
     def validate_defect(self):

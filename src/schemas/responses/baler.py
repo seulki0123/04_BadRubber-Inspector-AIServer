@@ -6,7 +6,7 @@ class BalerResponseData(BaseModel):
     production: str
     grade: str
     timestamp: str
-    baler: int
+    baler: str
     meta_path: str
     # confidence: float
 

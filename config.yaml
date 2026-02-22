@@ -10,6 +10,9 @@ baler_classification:
     checkpoint: ../BalerClassification/checkpoints/BR-A/1208_paired/best_model.pth
     img_size: 224
     num_classes: ~
+    class_names:
+      0: "1"
+      1: "3"
 
 defect_detection:
   anomalyclip:

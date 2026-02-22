@@ -33,7 +33,7 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
     # 2. classify baler
     side1 = request.images["side1"]
 
-    class_number, confidence = classifier.classify(
+    _, class_name, confidence = classifier.classify(
         bottom_path=side1.part1,
         top_path=side1.part2
     )
@@ -50,7 +50,7 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
         id=request.id,
         production=line,
         grade=grade,
-        baler=class_number,
+        baler=class_name,
         timestamp=timestamp,
         meta_path=meta_path
     )

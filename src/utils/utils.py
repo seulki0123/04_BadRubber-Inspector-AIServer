@@ -35,7 +35,7 @@ def save_metadata(
     return save_path
 
 
-def pop_baler_from_tmp(save_tmp_dir: str, request_id: str) -> Optional[int]:
+def pop_baler_from_tmp(save_tmp_dir: str, request_id: str) -> Optional[str]:
     """
     tmp 디렉토리에서 request_id.json을 읽어 baler 값을 반환하고
     파일이 존재하면 삭제한다.
