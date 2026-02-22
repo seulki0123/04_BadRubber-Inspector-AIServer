@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 from fastapi import APIRouter, Request
@@ -8,7 +9,7 @@ from ..schemas.responses.baler import (
     BalerResponseModel,
     BalerResponseData
 )
-from ..utils import get_save_path, save_metadata
+from ..utils import get_save_path, save_metadata, tmp_logging
 
 
 baler_router = APIRouter()
@@ -20,6 +21,8 @@ classifier = Classifier()
     response_model=BalerResponseModel
 )
 def classify(request: BalerRequestModel, fastapi_request: Request):
+    tmp_logging("INFO", f"Baler request: {request}")
+    t0 = time.time()
 
     # 1. load config
     config = fastapi_request.app.state.config
@@ -59,7 +62,10 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
     )
 
     # 5. return response
-    return BalerResponseModel(
+    res = BalerResponseModel(
         status="success",
         data=response_data
     )
+    tmp_logging("INFO", f"Baler response: {res}")
+    tmp_logging("INFO", f"Baler time: {(time.time() - t0)*1000}ms")
+    return res

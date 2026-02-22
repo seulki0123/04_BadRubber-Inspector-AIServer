@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime
 from typing import Literal
 
@@ -13,7 +14,7 @@ from ..schemas.responses.defect import (
     ImageResult,
     DetectionItem
 )
-from ..utils import get_save_path, save_metadata, pop_baler_from_tmp
+from ..utils import get_save_path, save_metadata, pop_baler_from_tmp, tmp_logging
 
 
 defect_router = APIRouter()
@@ -25,6 +26,8 @@ detector = Detector()
     response_model=DefectResponseModel
 )
 def detect_fault(request: DefectRequestModel, fastapi_request: Request):
+    tmp_logging("INFO", f"Defect request: {request}")
+    t0 = time.time()
 
     # 1. load config
     config = fastapi_request.app.state.config
@@ -137,17 +140,14 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
         baler = request.baler
 
         if tmp_baler is not None and tmp_baler != request.baler:
-            print(
-                f"[Warning] baler mismatch for {request.id} "
-                f"(request={request.baler}, tmp={tmp_baler})"
-            )
+            tmp_logging("WARNING", f"baler mismatch for {request.id} (request={request.baler}, tmp={tmp_baler})")
 
     else:
         baler = tmp_baler
-        print(f"[Warning] baler not provided, using tmp: {request.id}, baler {baler}")
+        tmp_logging("WARNING", f"baler not provided, using tmp: {request.id}, baler {baler}")
 
     if baler is None:
-        print(f"[Warning] baler not provided and not found in tmp: {request.id}")
+        tmp_logging("WARNING", f"baler not provided and not found in tmp: {request.id}")
 
     # 6. create response data
     meta_path = get_save_path(
@@ -175,7 +175,10 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
     )
 
     # 8. return response
-    return DefectResponseModel(
+    res = DefectResponseModel(
         status="success",
         data=response_data
     )
+    tmp_logging("INFO", f"Defect response: {res}")
+    tmp_logging("INFO", f"Defect time: {(time.time() - t0)*1000}ms")
+    return res
