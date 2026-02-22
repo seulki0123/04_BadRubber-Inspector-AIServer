@@ -37,11 +37,6 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
 
     os.makedirs(save_image_dir, exist_ok=True)
 
-    # 2. pop baler from tmp
-    baler = pop_baler_from_tmp(save_tmp_dir, request.id)
-    if baler is None:
-        print(f"[Warning] baler not found: {request.id}")
-
     # 2. create image items
     image_items = []
     for side_key, side in request.images.items():
@@ -135,7 +130,26 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
             )
         )
 
-    # 5. create response data
+    # 5. determine baler value
+    tmp_baler = pop_baler_from_tmp(save_tmp_dir, request.id)
+
+    if request.baler is not None:
+        baler = request.baler
+
+        if tmp_baler is not None and tmp_baler != request.baler:
+            print(
+                f"[Warning] baler mismatch for {request.id} "
+                f"(request={request.baler}, tmp={tmp_baler})"
+            )
+
+    else:
+        baler = tmp_baler
+        print(f"[Warning] baler not provided, using tmp: {request.id}, baler {baler}")
+
+    if baler is None:
+        print(f"[Warning] baler not provided and not found in tmp: {request.id}")
+
+    # 6. create response data
     meta_path = get_save_path(
         save_dir=save_meta_dir,
         file_prefix=request.id,
@@ -154,13 +168,13 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
         meta_path=meta_path
     )
 
-    # 6. save metadata
+    # 7. save metadata
     save_metadata(
         response_data=response_data,
         save_path=meta_path
     )
 
-    # 7. return response
+    # 8. return response
     return DefectResponseModel(
         status="success",
         data=response_data

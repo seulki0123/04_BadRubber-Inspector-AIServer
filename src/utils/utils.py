@@ -48,7 +48,12 @@ def pop_baler_from_tmp(save_tmp_dir: str, request_id: str) -> Optional[int]:
     try:
         with open(baler_tmp_path, "r", encoding="utf-8") as f:
             baler_json = json.load(f)
-            baler = baler_json.get("baler")
-            return baler
-    finally:
+
+        baler_value = baler_json.get("baler")
         os.remove(baler_tmp_path)
+
+        return baler_value
+
+    except Exception as e:
+        print(f"[Error] Failed to read baler tmp: {e}")
+        return None

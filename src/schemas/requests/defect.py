@@ -1,10 +1,11 @@
 from pydantic import BaseModel, model_validator
-from typing import Dict
+from typing import Dict, Optional
 from .base import SideModel
 
 
 class DefectRequestModel(BaseModel):
     id: str
+    baler: Optional[int] = None
     images: Dict[str, SideModel]
 
     model_config = {
