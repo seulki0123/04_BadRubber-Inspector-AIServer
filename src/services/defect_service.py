@@ -114,7 +114,7 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
             original_filename = os.path.splitext(os.path.basename(item["image_path"]))[0]
             save_image_path = get_save_path(
                 save_dir=save_image_dir,
-                file_prefix=f"{request.id}_{original_filename}",
+                file_prefix=f"{line}_{grade}_{request.id}",
                 timestamp=timestamp,
                 extension="jpg"
             )
