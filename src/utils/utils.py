@@ -15,10 +15,13 @@ def get_save_path(
     timestamp: Optional[str] = None,
     suffix: str = ""
 ) -> str:
-    os.makedirs(save_dir, exist_ok=True)
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    dated_dir = os.path.join(save_dir, today_str)
+    
+    os.makedirs(dated_dir, exist_ok=True)
+    
     filename = f"{file_prefix}{f'_{timestamp}' if timestamp else ''}{suffix}.{extension}"
-    return os.path.join(save_dir, filename)
-
+    return os.path.join(dated_dir, filename)
 
 def save_metadata(
     response_data: BaseModel,
