@@ -4,6 +4,8 @@ from .base import SideModel
 
 
 class DefectRequestModel(BaseModel):
+    production: Optional[str] = None
+    grade: Optional[str] = None
     id: str
     baler: Optional[str] = None
     images: Dict[str, SideModel]

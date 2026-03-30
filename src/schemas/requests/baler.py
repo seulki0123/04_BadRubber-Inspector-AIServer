@@ -1,9 +1,11 @@
 from pydantic import BaseModel, model_validator
-from typing import Dict
+from typing import Dict, Optional
 from .base import SideModel
 
 
 class BalerRequestModel(BaseModel):
+    production: Optional[str] = None
+    grade: Optional[str] = None
     id: str
     images: Dict[str, SideModel]
 
