@@ -9,11 +9,12 @@ from ..schemas.responses.baler import (
     BalerResponseModel,
     BalerResponseData
 )
-from ..utils import get_save_path, save_metadata, tmp_logging
+from ..utils import get_save_path, save_metadata, ProcessLogger
 
 
 baler_router = APIRouter()
 classifier = Classifier()
+logger = ProcessLogger("BalerService")
 
 
 @baler_router.post(
@@ -21,7 +22,7 @@ classifier = Classifier()
     response_model=BalerResponseModel
 )
 def classify(request: BalerRequestModel, fastapi_request: Request):
-    tmp_logging("INFO", f"Baler request: {request}")
+    logger.log_info(f"Baler request: {request}")
     t0 = time.time()
 
     # 1. load config
@@ -33,10 +34,16 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
     # 2. classify baler
     side1 = request.images["side1"]
 
-    _, class_name, confidence = classifier.classify(
-        bottom_path=side1.part1,
-        top_path=side1.part2
-    )
+    try:
+        _, class_name, confidence = classifier.classify(
+            bottom_path=side1.part1,
+            top_path=side1.part2
+        )
+    except Exception as e:
+        logger.log_error(f"Baler classification error: {e}")
+        class_name = "10"
+        confidence = 0.0
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # 3. create response data
@@ -66,6 +73,6 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
         status="success",
         data=response_data
     )
-    tmp_logging("INFO", f"Baler response: {res}")
-    tmp_logging("INFO", f"Baler time: {(time.time() - t0)*1000}ms")
+    logger.log_info(f"Baler response: {res}")
+    logger.log_info(f"Baler time: {(time.time() - t0)*1000}ms")
     return res

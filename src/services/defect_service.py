@@ -14,11 +14,12 @@ from ..schemas.responses.defect import (
     ImageResult,
     DetectionItem
 )
-from ..utils import get_save_path, save_metadata, pop_baler_from_tmp, tmp_logging
+from ..utils import get_save_path, save_metadata, pop_baler_from_tmp, ProcessLogger
 
 
 defect_router = APIRouter()
 detector = Detector()
+logger = ProcessLogger("DefectService")
 
 
 @defect_router.post(
@@ -26,7 +27,7 @@ detector = Detector()
     response_model=DefectResponseModel
 )
 def detect_fault(request: DefectRequestModel, fastapi_request: Request):
-    tmp_logging("INFO", f"Defect request: {request}")
+    logger.log_info(f"Defect request: {request}")
     t0 = time.time()
 
     # 1. load config
@@ -58,17 +59,47 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
                 "image_path": side.part2
             })
 
-    image_paths = [item["image_path"] for item in image_items]
+    # check valid images
+    valid_images = []
+    index_map = []
+
+    for i, item in enumerate(image_items):
+        img = cv2.imread(item["image_path"])
+        if img is None:
+            logger.log_warning(f"Invalid image: {item['image_path']}")
+            continue
+
+        valid_images.append(img)
+        index_map.append(i)
 
     # 3. detect faults
-    results = detector.detect(image_paths)
+    results_valid = detector.detect(valid_images)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # reconstruct results
+    results_full = [None] * len(image_items)
+
+    for valid_idx, original_idx in enumerate(index_map):
+        results_full[original_idx] = results_valid[valid_idx]
 
     # 4. create response images
     image_results = []
     total_detection_count = 0
 
-    for item, batch_item in zip(image_items, results):
+    for item, batch_item in zip(image_items, results_full):
+        if batch_item is None:
+            image_results.append(
+                ImageResult(
+                    side=item["side"],
+                    part=item["part"],
+                    image_path=item["image_path"],
+                    faulty_img_path=None,
+                    detections=[],
+                    detection_count=0
+                )
+            )
+            continue
+
         detections = []
 
         if mode == "segment":
@@ -140,14 +171,14 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
         baler = request.baler
 
         if tmp_baler is not None and tmp_baler != request.baler:
-            tmp_logging("WARNING", f"baler mismatch for {request.id} (request={request.baler}, tmp={tmp_baler})")
+            logger.log_warning(f"baler mismatch for {request.id} (request={request.baler}, tmp={tmp_baler})")
 
     else:
         baler = tmp_baler
-        tmp_logging("WARNING", f"baler not provided, using tmp: {request.id}, baler {baler}")
+        logger.log_warning(f"baler not provided, using tmp: {request.id}, baler {baler}")
 
     if baler is None:
-        tmp_logging("WARNING", f"baler not provided and not found in tmp: {request.id}")
+        logger.log_warning(f"baler not provided and not found in tmp: {request.id}")
 
     # 6. create response data
     meta_path = get_save_path(
@@ -179,6 +210,6 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
         status="success",
         data=response_data
     )
-    tmp_logging("INFO", f"Defect response: {res}")
-    tmp_logging("INFO", f"Defect time: {(time.time() - t0)*1000}ms")
+    logger.log_info(f"Defect response: {res}")
+    logger.log_info(f"Defect time: {(time.time() - t0)*1000}ms")
     return res

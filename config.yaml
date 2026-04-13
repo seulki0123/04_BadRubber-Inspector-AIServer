@@ -4,6 +4,10 @@ production_information:
   save_meta_dir: ./tests/results/metadata
   save_image_dir: ./tests/results/images
   return_mode: anomaly
+  log_dir:
+    root: "logs"
+    process: "process"
+    monitor: "monitor"
 
 baler_classification:
   classifier:

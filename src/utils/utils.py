@@ -5,9 +5,6 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
-def tmp_logging(level: str, message: str):
-    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - [{level}] - {message}")
-
 def get_save_path(
     save_dir: str,
     file_prefix: str,
