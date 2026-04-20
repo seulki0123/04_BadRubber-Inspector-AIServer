@@ -2,7 +2,6 @@ import time
 from datetime import datetime
 
 from fastapi import APIRouter, Request
-from baler_classification import Classifier
 
 from ..schemas.requests.baler import BalerRequestModel
 from ..schemas.responses.baler import (
@@ -13,9 +12,7 @@ from ..utils import get_save_path, save_metadata, ProcessLogger
 
 
 baler_router = APIRouter()
-classifier = Classifier()
 logger = ProcessLogger("BalerService")
-
 
 @baler_router.post(
     "/classify",
@@ -26,10 +23,11 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
     t0 = time.time()
 
     # 1. load config
-    config = fastapi_request.app.state.config
-    line = config["line"]
-    grade = config["grade"]
-    save_tmp_dir = config["save_tmp_dir"]
+    production = fastapi_request.app.state.config["production"]
+    classifier = fastapi_request.app.state.baler_classifier
+    line = production["line"]
+    grade = production["grade"]
+    save_tmp_dir = production["save_tmp_dir"]
 
     # 2. classify baler
     side1 = request.images["side1"]

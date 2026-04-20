@@ -5,7 +5,6 @@ from typing import Literal
 
 import cv2
 from fastapi import APIRouter, Request
-from defect_detection import Detector
 
 from ..schemas.requests.defect import DefectRequestModel
 from ..schemas.responses.defect import (
@@ -18,7 +17,6 @@ from ..utils import get_save_path, save_metadata, pop_baler_from_tmp, ProcessLog
 
 
 defect_router = APIRouter()
-detector = Detector()
 logger = ProcessLogger("DefectService")
 
 
@@ -31,13 +29,15 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
     t0 = time.time()
 
     # 1. load config
-    config = fastapi_request.app.state.config
-    line = config["line"]
-    grade = config["grade"]
-    save_tmp_dir = config["save_tmp_dir"]
-    save_meta_dir = config["save_meta_dir"]
-    save_image_dir = config["save_image_dir"]
-    mode: Literal["segment", "anomaly"] = config["return_mode"]
+    production = fastapi_request.app.state.config["production"]
+    detector = fastapi_request.app.state.detector
+    line = production["line"]
+    # grade = production["grade"]
+    grade = request.grade
+    save_tmp_dir = production["save_tmp_dir"]
+    save_meta_dir = production["save_meta_dir"]
+    save_image_dir = production["save_image_dir"]
+    mode: Literal["segment", "anomaly"] = production["return_mode"]
 
     os.makedirs(save_image_dir, exist_ok=True)
 

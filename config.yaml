@@ -1,50 +1,40 @@
+# Grade Selection-driven configuration.
+#
+# The `production_information.line` and `.grade` fields select a profile from
+# `DefectDetection/defect_detection/profiles/registry.yaml`, which supplies the
+# classifier/segmenter/cluster classes, checkpoints, thresholds, `return_mode`
+# default, and `show` defaults for this run.
+#
+# Runtime tweak paths in THIS file:
+#   - production_information.return_mode  (overrides the profile default)
+#   - defect_detection.show               (deep-merged on top of profile show)
+#   - defect_detection.overrides          (checkpoint/threshold/classes tweaks)
+#   - baler_classification.overrides      (baler classifier tweaks)
+#
+# `return_mode` and `show` are NOT allowed inside `overrides:` -- use the
+# dedicated paths above. class_id keys inside classes are immutable; only
+# name / color / pass / description can be modified per class entry.
+#
+# `checkpoint_root` is the single absolute path that every checkpoint inside
+# a base profile is anchored to (both defect_detection and baler_classification).
+
+checkpoint_root: C:\LG_Chemistry\BaleInspectionAIServer\Inspector-AIServer\checkpoints
+
 production_information:
   line: SSBR
-  grade: M2520
-  save_meta_dir: ./tests/results/metadata
-  save_image_dir: ./tests/results/images
-  return_mode: anomaly
-  log_dir:
-    root: "logs"
-    process: "process"
-    monitor: "monitor"
-
-baler_classification:
-  classifier:
-    checkpoint: ../BalerClassification/checkpoints/BR-A/1208_paired/best_model.pth
-    img_size: 224
-    num_classes: ~
-    class_names:
-      0: "1"
-      1: "3"
+  grade: F2150
+  save_meta_dir: C:\BaleMetadataDB
+  save_image_dir: C:\LG_Chemistry\BaleInspectionAIServer\Inspector-AIServer\results\faulty_images
+  # return_mode: segment   # optional; defaults to profile
 
 defect_detection:
-  anomalyclip:
-    checkpoint: ../DefectDetection/checkpoints/anomalyclip/9_12_4_mvtec+F1038-F2150-M2520/epoch_15.pth
-    imgsz: 512 # 32*16
-    threshold: 0.25
-    min_area: 0
+  overrides: {}
+  show: {}
 
-  classifier:
-    checkpoint: ../DefectDetection/checkpoints/classify/weights/SSBR/_intergrated/weights/best.pt
-    imgsz: 224 # 32*7
-    threshold: 0.8
+baler_classification:
+  overrides: {}
 
-  bgremover:
-    checkpoint: ../DefectDetection/checkpoints/segment/weights/rmbg/all/weights/best.pt
-    imgsz: 160 # 32*5
-
-  segmenter:
-    checkpoint: ../DefectDetection/checkpoints/segment/weights/yolo_seg/SSBR_ALL/weights/best.pt
-    imgsz: 224 # 32*7
-    threshold: 0.0
-
-  show:
-    anomaly_map: false
-    anomaly_score: true
-    foreground: false
-    anomaly_regions_polygon: true
-    anomaly_regions_bbox: true
-    segmentation_regions_polygon: false
-    segmentation_regions_bbox: false
-    show_pass_classes: false
+log_dir:
+  root: "logs"
+  process: "process"
+  monitor: "monitor"
