@@ -26,7 +26,8 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
     production = fastapi_request.app.state.config["production"]
     classifier = fastapi_request.app.state.baler_classifier
     line = production["line"]
-    grade = production["grade"]
+    # grade = production["grade"]
+    grade = request.grade
     save_tmp_dir = production["save_tmp_dir"]
 
     # 2. classify baler
