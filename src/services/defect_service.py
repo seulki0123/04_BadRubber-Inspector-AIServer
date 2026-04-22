@@ -1,7 +1,7 @@
 import os
 import time
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 import cv2
 from fastapi import APIRouter, Request
@@ -39,6 +39,7 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
     save_image_dir = production["save_image_dir"]
     mode: Literal["segment", "anomaly"] = production["return_mode"]
 
+    os.makedirs(save_meta_dir, exist_ok=True)
     os.makedirs(save_image_dir, exist_ok=True)
 
     # 2. create image items
@@ -59,8 +60,15 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
                 "image_path": side.part2
             })
 
+    dot_conf_by_part = selector.config["defect_detection"].get("dot_confidence_by_part") or {}
+
+    def _dot_conf_for_part(part: int) -> Optional[float]:
+        value = dot_conf_by_part.get(f"part{part}")
+        return None if value is None else float(value)
+
     # check valid images
     valid_images = []
+    valid_dot_confs = []
     index_map = []
 
     for i, item in enumerate(image_items):
@@ -70,10 +78,11 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
             continue
 
         valid_images.append(img)
+        valid_dot_confs.append(_dot_conf_for_part(item["part"]))
         index_map.append(i)
 
     # 3. detect faults
-    results_valid = detector.detect(valid_images)
+    results_valid = detector.detect(valid_images, dot_confs=valid_dot_confs)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # reconstruct results
