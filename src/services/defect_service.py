@@ -60,10 +60,10 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
                 "image_path": side.part2
             })
 
-    dot_conf_by_part = selector.config["defect_detection"].get("dot_confidence_by_part") or {}
+    dot_conf_by_side = selector.config["defect_detection"].get("dot_confidence_by_side") or {}
 
-    def _dot_conf_for_part(part: int) -> Optional[float]:
-        value = dot_conf_by_part.get(f"part{part}")
+    def _dot_conf_for_side(side: int) -> Optional[float]:
+        value = dot_conf_by_side.get(f"side{side}")
         return None if value is None else float(value)
 
     # check valid images
@@ -78,7 +78,7 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
             continue
 
         valid_images.append(img)
-        valid_dot_confs.append(_dot_conf_for_part(item["part"]))
+        valid_dot_confs.append(_dot_conf_for_side(item["side"]))
         index_map.append(i)
 
     # 3. detect faults
