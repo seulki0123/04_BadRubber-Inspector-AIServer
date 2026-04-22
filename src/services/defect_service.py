@@ -124,6 +124,27 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
                         )
                     )
 
+            # Keep dot detections visible in segment mode.
+            anomaly_regions = batch_item.anomaly.regions
+            anomaly_cls_regions = batch_item.anomaly_cls.regions
+
+            if len(anomaly_regions) != len(anomaly_cls_regions):
+                raise ValueError("Anomaly region/classification mismatch")
+
+            for region, cls in zip(anomaly_regions, anomaly_cls_regions):
+                if not str(getattr(region, "source", "")).startswith("dot_detector"):
+                    continue
+                if cls.is_pass:
+                    continue
+                detections.append(
+                    DetectionItem(
+                        class_id=cls.class_id,
+                        class_name=cls.class_name,
+                        confidence=cls.confidence,
+                        bbox=list(region.bboxes_xyxy)
+                    )
+                )
+
         elif mode == "anomaly":
 
             anomaly_regions = batch_item.anomaly.regions
