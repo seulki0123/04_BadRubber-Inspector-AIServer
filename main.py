@@ -1,30 +1,16 @@
-import os
 import traceback
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
-from defect_detection import Detector
-from baler_classification import Classifier
-from src import baler_router, defect_router, load_config
-from src.utils import ProcessLogger
+from src import baler_router, defect_router
+from src.utils import GradeSelector, ProcessLogger
 
 app = FastAPI(title="Inspector AI Server")
 logger = ProcessLogger("Main")
 
-config = load_config()
-config["production"]["save_tmp_dir"] = "./tmp"
-app.state.config = config
-
-# production = config["production"]
-# if production["save_meta_dir"] and os.path.exists(production["save_meta_dir"]):
-#     raise ValueError(f"Save directory already exists: {production['save_meta_dir']}")
-# if production["save_image_dir"] and os.path.exists(production["save_image_dir"]):
-#     raise ValueError(f"Save directory already exists: {production['save_image_dir']}")
-
-app.state.detector = Detector(config=config["defect_detection"])
-app.state.baler_classifier = Classifier(config=config["baler_classification"])
+app.state.grade_selector = GradeSelector(config_path="config.yaml")
 
 app.include_router(baler_router, prefix="/api") 
 app.include_router(defect_router, prefix="/api")

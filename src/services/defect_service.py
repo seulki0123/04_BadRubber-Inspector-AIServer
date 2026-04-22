@@ -28,12 +28,12 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
     logger.log_info(f"Defect request: {request}")
     t0 = time.time()
 
-    # 1. load config
-    production = fastapi_request.app.state.config["production"]
-    detector = fastapi_request.app.state.detector
+    # 1. load config (switch profile if request's production/grade differs)
+    selector = fastapi_request.app.state.grade_selector
+    production = selector.ensure(request.production, request.grade)
+    detector = selector.detector
     line = production["line"]
-    # grade = production["grade"]
-    grade = request.grade
+    grade = production["grade"]
     save_tmp_dir = production["save_tmp_dir"]
     save_meta_dir = production["save_meta_dir"]
     save_image_dir = production["save_image_dir"]

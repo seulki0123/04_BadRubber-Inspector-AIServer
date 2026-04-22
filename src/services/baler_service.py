@@ -22,12 +22,12 @@ def classify(request: BalerRequestModel, fastapi_request: Request):
     logger.log_info(f"Baler request: {request}")
     t0 = time.time()
 
-    # 1. load config
-    production = fastapi_request.app.state.config["production"]
-    classifier = fastapi_request.app.state.baler_classifier
+    # 1. load config (switch profile if request's production/grade differs)
+    selector = fastapi_request.app.state.grade_selector
+    production = selector.ensure(request.production, request.grade)
+    classifier = selector.baler_classifier
     line = production["line"]
-    # grade = production["grade"]
-    grade = request.grade
+    grade = production["grade"]
     save_tmp_dir = production["save_tmp_dir"]
 
     # 2. classify baler

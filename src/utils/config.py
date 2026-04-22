@@ -13,6 +13,8 @@ them via the dedicated `production_information.return_mode` and
 `defect_detection.show` paths (not under `overrides:`).
 """
 from __future__ import annotations
+from typing import Optional
+
 import yaml
 
 from profiles import (  # noqa: E402
@@ -28,12 +30,17 @@ def _read_config_yaml(path: str) -> dict:
         return yaml.safe_load(f) or {}
 
 
-def load_config(config_path: str = "config.yaml") -> dict:
+def load_config(
+    config_path: str = "config.yaml",
+    *,
+    override_line: Optional[str] = None,
+    override_grade: Optional[str] = None,
+) -> dict:
     raw = _read_config_yaml(config_path)
 
     prod = raw.get("production_information") or {}
-    line = prod.get("line")
-    grade = prod.get("grade")
+    line = override_line or prod.get("line")
+    grade = override_grade or prod.get("grade")
     if not line or not grade:
         raise ValueError(
             "config.yaml: `production_information.line` and `.grade` are required."
