@@ -89,4 +89,7 @@ def load_config(
         "defect_detection": defect_cfg,
         "baler_classification": baler_cfg,
         "log_dir": raw.get("log_dir") or {},
+        "log_cleaner": raw.get("log_cleaner") if isinstance(raw.get("log_cleaner"), dict) else {},
+        "meta_cleaner": raw.get("meta_cleaner") if isinstance(raw.get("meta_cleaner"), dict) else {},
+        "faultyim_cleaner": raw.get("faultyim_cleaner") if isinstance(raw.get("faultyim_cleaner"), dict) else {},
     }

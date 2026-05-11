@@ -3,7 +3,7 @@ import json
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
-
+from functools import wraps
 
 def get_save_path(
     save_dir: str,
@@ -61,3 +61,17 @@ def pop_baler_from_tmp(save_tmp_dir: str, request_id: str) -> Optional[str]:
     except Exception as e:
         print(f"[Error] Failed to read baler tmp: {e}")
         return None
+
+def safe_call(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except Exception:
+            # self.logger 있으면 쓰고, 없으면 print
+            if hasattr(self, 'logger'):
+                self.logger.error(f"Error in '{func.__name__}' function : {traceback.format_exc()}")
+            else:
+                raise Exception(f"Error in '{func.__name__}' function : {traceback.format_exc()}")
+            return None
+    return wrapper

@@ -5,12 +5,14 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
 from src import baler_router, defect_router
+from src.fileclenaer import FileCleanerService
 from src.utils import GradeSelector, ProcessLogger
 
 app = FastAPI(title="Inspector AI Server")
 logger = ProcessLogger("Main")
 
 app.state.grade_selector = GradeSelector(config_path="config.yaml")
+FileCleanerService().run()
 
 app.include_router(baler_router, prefix="/api") 
 app.include_router(defect_router, prefix="/api")
