@@ -43,13 +43,16 @@ log_cleaner:
   enabled: true
   retention_hours: 480
   thread_interval: 3600
+  allow_targets_outside_root: false
 
 meta_cleaner:
   enabled: true
   retention_hours: 480
   thread_interval: 3600
+  allow_targets_outside_root: true
 
 faultyim_cleaner:
   enabled: true
   retention_hours: 48
   thread_interval: 3600
+  allow_targets_outside_root: false
