@@ -79,17 +79,19 @@ def load_config(
     production = {
         "line": line,
         "grade": str(grade),
-        "save_meta_dir": prod.get("save_meta_dir"),
-        "save_image_dir": prod.get("save_image_dir"),
-        "return_mode": resolved.get("return_mode"),
+        "save_meta_dir": prod["save_meta_dir"],
+        "save_image_dir": prod["save_image_dir"],
+        "baler_handoff_dir": prod["baler_handoff_dir"],
+        "return_mode": resolved["return_mode"],
     }
 
     return {
         "production": production,
         "defect_detection": defect_cfg,
         "baler_classification": baler_cfg,
-        "log_dir": raw.get("log_dir") or {},
-        "log_cleaner": raw.get("log_cleaner") if isinstance(raw.get("log_cleaner"), dict) else {},
-        "meta_cleaner": raw.get("meta_cleaner") if isinstance(raw.get("meta_cleaner"), dict) else {},
-        "faultyim_cleaner": raw.get("faultyim_cleaner") if isinstance(raw.get("faultyim_cleaner"), dict) else {},
+        "log_dir": raw["log_dir"],
+        "log_cleaner": raw["log_cleaner"],
+        "meta_cleaner": raw["meta_cleaner"],
+        "faultyim_cleaner": raw["faultyim_cleaner"],
+        "baler_handoff_cleaner": raw["baler_handoff_cleaner"],
     }

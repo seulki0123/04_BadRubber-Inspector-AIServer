@@ -30,7 +30,6 @@ class GradeSelector:
         self._logger = ProcessLogger("GradeSelector")
 
         config = load_config(config_path)
-        config["production"]["save_tmp_dir"] = "./tmp"
 
         prod = config["production"]
         self._logger.log_info(
@@ -109,8 +108,6 @@ class GradeSelector:
                     f"Keeping current ({cur_line}, {cur_grade})."
                 )
                 raise
-
-            new_config["production"]["save_tmp_dir"] = cur.get("save_tmp_dir", "./tmp")
 
             new_detector = Detector(config=new_config["defect_detection"])
             new_classifier = Classifier(config=new_config["baler_classification"])

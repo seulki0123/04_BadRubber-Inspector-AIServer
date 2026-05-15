@@ -35,31 +35,41 @@ def save_metadata(
     return save_path
 
 
-def pop_baler_from_tmp(save_tmp_dir: str, request_id: str) -> Optional[str]:
-    """
-    tmp 디렉토리에서 request_id.json을 읽어 baler 값을 반환하고
-    파일이 존재하면 삭제한다.
+def pop_baler_from_handoff(baler_handoff_dir: str, request_id: str) -> Optional[str]:
+    """baler classification 결과를 handoff 디렉토리에서 pop 한다.
 
-    :param save_tmp_dir: tmp 저장 디렉토리
+    `/classify` 가 `<baler_handoff_dir>/<YYYY-MM-DD>/<request_id>.json` 으로
+    떨어뜨려둔 baler 결과를, 같은 `request_id` 의 `/detect_fault` 요청이 도착했을 때
+    읽어 들이고 즉시 삭제한다. 누락분(짝이 안 맞는 파일)은 BalerHandoffCleaner 가
+    주기적으로 정리한다.
+
+    날짜 하위 폴더 형태(get_save_path 의 dated_dir)와 평탄 형태 둘 다를
+    호환적으로 탐색한다.
+
+    :param baler_handoff_dir: handoff 루트 디렉토리
     :param request_id: 요청 id
-    :return: baler 값 또는 None
+    :return: baler 값 또는 None (파일 없음/읽기 실패)
     """
-    baler_tmp_path = os.path.join(save_tmp_dir, f"{request_id}.json")
+    candidates = [
+        os.path.join(baler_handoff_dir, datetime.now().strftime("%Y-%m-%d"), f"{request_id}.json"),
+        os.path.join(baler_handoff_dir, f"{request_id}.json"),
+    ]
 
-    if not os.path.exists(baler_tmp_path):
+    baler_handoff_path = next((p for p in candidates if os.path.exists(p)), None)
+    if baler_handoff_path is None:
         return None
 
     try:
-        with open(baler_tmp_path, "r", encoding="utf-8") as f:
+        with open(baler_handoff_path, "r", encoding="utf-8") as f:
             baler_json = json.load(f)
 
         baler_value = baler_json.get("baler")
-        os.remove(baler_tmp_path)
+        os.remove(baler_handoff_path)
 
         return baler_value
 
     except Exception as e:
-        print(f"[Error] Failed to read baler tmp: {e}")
+        print(f"[Error] Failed to read baler handoff: {e}")
         return None
 
 def safe_call(func):

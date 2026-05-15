@@ -7,6 +7,7 @@ thread_interval 로 CustomThread 를 띄운다.
 
 from ..utils import CustomThread
 
+from .baler_handoff_cleaner import BalerHandoffCleaner
 from .faultyim_cleaner import FaultyImageCleaner
 from .log_cleaner import LogCleaner
 from .meta_cleaner import MetaCleaner
@@ -19,12 +20,14 @@ class FileCleanerService:
         self.log_cleaner = LogCleaner()
         self.meta_cleaner = MetaCleaner()
         self.faulty_image_cleaner = FaultyImageCleaner()
+        self.baler_handoff_cleaner = BalerHandoffCleaner()
 
     def run(self):
         cleaners = [
             self.log_cleaner,
             self.meta_cleaner,
             self.faulty_image_cleaner,
+            self.baler_handoff_cleaner,
         ]
         for cleaner in cleaners:
             CustomThread(

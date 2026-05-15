@@ -13,7 +13,7 @@ from ..schemas.responses.defect import (
     ImageResult,
     DetectionItem
 )
-from ..utils import get_save_path, save_metadata, pop_baler_from_tmp, ProcessLogger
+from ..utils import get_save_path, save_metadata, pop_baler_from_handoff, ProcessLogger
 
 
 defect_router = APIRouter()
@@ -34,9 +34,9 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
     detector = selector.detector
     line = production["line"]
     grade = production["grade"]
-    save_tmp_dir = production["save_tmp_dir"]
     save_meta_dir = production["save_meta_dir"]
     save_image_dir = production["save_image_dir"]
+    baler_handoff_dir = production["baler_handoff_dir"]
     mode: Literal["segment", "anomaly"] = production["return_mode"]
 
     os.makedirs(save_meta_dir, exist_ok=True)
@@ -195,20 +195,20 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
         )
 
     # 5. determine baler value
-    tmp_baler = pop_baler_from_tmp(save_tmp_dir, request.id)
+    handoff_baler = pop_baler_from_handoff(baler_handoff_dir, request.id)
 
     if request.baler is not None:
         baler = request.baler
 
-        if tmp_baler is not None and tmp_baler != request.baler:
-            logger.log_warning(f"baler mismatch for {request.id} (request={request.baler}, tmp={tmp_baler})")
+        if handoff_baler is not None and handoff_baler != request.baler:
+            logger.log_warning(f"baler mismatch for {request.id} (request={request.baler}, handoff_baler={handoff_baler})")
 
     else:
-        baler = tmp_baler
-        logger.log_warning(f"baler not provided, using tmp: {request.id}, baler {baler}")
+        baler = handoff_baler
+        logger.log_warning(f"baler not provided, using handoff: {request.id}, baler {baler}")
 
     if baler is None:
-        logger.log_warning(f"baler not provided and not found in tmp: {request.id}")
+        logger.log_warning(f"baler not provided and not found in handoff: {request.id}")
 
     # 6. create response data
     meta_path = get_save_path(
