@@ -145,7 +145,7 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
                     )
                 )
 
-        elif mode == "anomaly":
+        # elif mode == "anomaly":
 
             anomaly_regions = batch_item.anomaly.regions
             anomaly_cls_regions = batch_item.anomaly_cls.regions
@@ -156,6 +156,8 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
             for region, cls in zip(anomaly_regions, anomaly_cls_regions):
                 if cls.is_pass:
                     continue
+                if mode == "segment" and  not cls.class_name == "foreign":
+                        continue
                 detections.append(
                     DetectionItem(
                         class_id=cls.class_id,
