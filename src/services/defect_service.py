@@ -146,7 +146,7 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
                 )
 
         # elif mode == "anomaly":
-
+            # TODO if 밖으로
             anomaly_regions = batch_item.anomaly.regions
             anomaly_cls_regions = batch_item.anomaly_cls.regions
 
@@ -169,6 +169,20 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
 
         else:
             raise ValueError(f"Unsupported mode: {mode}")
+
+        # PatchCore 전역 이상점수 검출(class_id=9999, 'etc'). 모드와 무관하게 항상 반영.
+        if batch_item.patchcore is not None:
+            for p in batch_item.patchcore:
+                if p.is_pass:
+                    continue
+                detections.append(
+                    DetectionItem(
+                        class_id=p.class_id,
+                        class_name=p.class_name,
+                        confidence=p.confidence,
+                        bbox=list(p.bboxes_xyxy)
+                    )
+                )
 
         detection_count = len(detections)
         total_detection_count += detection_count
