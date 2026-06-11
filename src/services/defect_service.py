@@ -66,9 +66,16 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
         value = dot_conf_by_side.get(f"side{side}")
         return None if value is None else float(value)
 
+    patchcore_active_by_side = selector.config["defect_detection"].get("patchcore_active_by_side") or {}
+
+    def _patchcore_active_for_side(side: int) -> Optional[bool]:
+        value = patchcore_active_by_side.get(f"side{side}")
+        return None if value is None else bool(value)
+
     # check valid images
     valid_images = []
     valid_dot_confs = []
+    valid_patchcore_active = []
     index_map = []
 
     for i, item in enumerate(image_items):
@@ -79,10 +86,11 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
 
         valid_images.append(img)
         valid_dot_confs.append(_dot_conf_for_side(item["side"]))
+        valid_patchcore_active.append(_patchcore_active_for_side(item["side"]))
         index_map.append(i)
 
     # 3. detect faults
-    results_valid = detector.detect(valid_images, dot_confs=valid_dot_confs)
+    results_valid = detector.detect(valid_images, dot_confs=valid_dot_confs, patchcore_active=valid_patchcore_active)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # reconstruct results
