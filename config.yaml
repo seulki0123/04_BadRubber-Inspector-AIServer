@@ -1,19 +1,11 @@
 # Grade Selection-driven configuration.
 #
-# The `production_information.line` and `.grade` fields select a profile from
-# `DefectDetection/defect_detection/profiles/registry.yaml`, which supplies the
-# classifier/segmenter/cluster classes, checkpoints, thresholds, `return_mode`
-# default, and `show` defaults for this run.
-#
-# Runtime tweak paths in THIS file:
-#   - production_information.return_mode  (overrides the profile default)
-#   - defect_detection.show               (deep-merged on top of profile show)
-#   - defect_detection.overrides          (checkpoint/threshold/classes tweaks)
-#   - baler_classification.overrides      (baler classifier tweaks)
-#
-# `return_mode` and `show` are NOT allowed inside `overrides:` -- use the
-# dedicated paths above. class_id keys inside classes are immutable; only
-# name / color / pass / description can be modified per class entry.
+# The `production_information.line` and `.grade` fields select the foundation
+# profile by convention -- `src/Profiles/profiles/lines/<LINE>/_<grade>.py`
+# (e.g. BR-B / F2150 -> lines/BRB/_F2150.py). That module supplies everything
+# for this run: classifier/segmenter/cluster classes, checkpoints, thresholds,
+# `return_mode`, and `show`. There is no registry or override layer; to change
+# a profile, edit its base module.
 #
 # `checkpoint_root` is the single absolute path that every checkpoint inside
 # a base profile is anchored to (both defect_detection and baler_classification).
@@ -26,14 +18,6 @@ production_information:
   save_meta_dir: C:\BaleMetadataDB
   save_image_dir: C:\LG_Chemistry\BaleInspectionAIServer\Inspector-AIServer\results\faulty_images
   baler_handoff_dir: C:\LG_Chemistry\BaleInspectionAIServer\Inspector-AIServer\tmp
-  # return_mode: segment   # optional; defaults to profile
-
-defect_detection:
-  overrides: {}
-  show: {}
-
-baler_classification:
-  overrides: {}
 
 log_dir:
   root: "logs"

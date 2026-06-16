@@ -6,11 +6,9 @@ Resolves a single `config.yaml` into:
     - `defect_detection`: dict consumed by `defect_detection.Detector`
     - `baler_classification`: dict consumed by `baler_classification.Classifier`
 
-The `production_information.line/grade` drives which profile is selected from
-the shared `src/Profiles/profiles/registry.yaml`. Foundation-level defaults
-for `return_mode` and `show` live inside each base profile; end-users tweak
-them via the dedicated `production_information.return_mode` and
-`defect_detection.show` paths (not under `overrides:`).
+The `production_information.line/grade` selects the foundation profile by
+convention (`products/<LINE>/_<grade>.py`); everything else (classes, checkpoints,
+thresholds, `return_mode`, `show`) lives inside that base profile module.
 """
 from __future__ import annotations
 from typing import Optional
@@ -18,7 +16,6 @@ from typing import Optional
 import yaml
 
 from profiles import (  # noqa: E402
-    build_runtime_overrides,
     load_profile,
     to_baler_classification_config,
     to_defect_detection_config,
@@ -54,24 +51,7 @@ def load_config(
         )
     checkpoint_root = checkpoint_root.strip()
 
-    # Defect-side runtime overrides: defect_detection.overrides + legacy paths
-    # (production_information.return_mode, defect_detection.show).
-    defect_extra = build_runtime_overrides(raw, section="defect_detection")
-
-    # Baler-side runtime overrides: everything under baler_classification.overrides
-    # is treated as an override to the Profile's `baler_classifier` section.
-    baler_sub = raw.get("baler_classification") or {}
-    baler_overrides_raw = baler_sub.get("overrides") or {}
-    combined = dict(defect_extra or {})
-    if baler_overrides_raw:
-        combined["baler_classifier"] = {
-            **(combined.get("baler_classifier") or {}),
-            **(baler_overrides_raw.get("classifier") or baler_overrides_raw),
-        }
-
-    resolved = load_profile(
-        line, grade, checkpoint_root, extra_overrides=combined or None
-    )
+    resolved = load_profile(line, grade, checkpoint_root)
 
     defect_cfg = to_defect_detection_config(resolved)
     baler_cfg = to_baler_classification_config(resolved)
