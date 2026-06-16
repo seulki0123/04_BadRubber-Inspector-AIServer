@@ -19,3 +19,6 @@ DefectDetection/
 BalerClassification/
 
 logs/
+
+.claude
+.omc

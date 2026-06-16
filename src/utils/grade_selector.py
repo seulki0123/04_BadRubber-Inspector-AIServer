@@ -11,6 +11,7 @@ serializes reloads with an `RLock` and reads under the same lock.
 """
 from __future__ import annotations
 
+import json
 import os
 import threading
 import time
@@ -42,10 +43,32 @@ class GradeSelector:
         # if prod["save_image_dir"] and os.path.exists(prod["save_image_dir"]):
         #     raise ValueError(f"Save directory already exists: {prod['save_image_dir']}")
 
+        self._log_profile(config, header="Initial profile loaded")
+
         self._config = config
         self._detector = Detector(config=config["defect_detection"])
         self._baler_classifier = Classifier(config=config["baler_classification"])
 
+    def _log_profile(self, config: dict, *, header: str) -> None:
+        """Dump the full resolved profile to the process log.
+
+        Logged whenever a profile is (re)loaded so the operator can see exactly
+        which classes/checkpoints/thresholds/return_mode are now in effect.
+        """
+        prod = config.get("production", {})
+        sections = {
+            "production": prod,
+            "defect_detection": config.get("defect_detection"),
+            "baler_classification": config.get("baler_classification"),
+        }
+        try:
+            body = json.dumps(sections, indent=2, ensure_ascii=False, default=str)
+        except Exception as e:  # never let logging break a reload
+            body = f"<failed to serialize profile: {e}> {sections!r}"
+
+        self._logger.log_info(
+            f"{header}: line={prod.get('line')}, grade={prod.get('grade')}\n{body}"
+        )
 
     @property
     def config(self) -> dict:
@@ -120,6 +143,10 @@ class GradeSelector:
                 f"Grade selection loaded: line={target_line}, grade={target_grade}, "
                 f"return_mode={new_config['production'].get('return_mode')} "
                 f"(reload took {(time.time() - t0) * 1000:.1f}ms)"
+            )
+            self._log_profile(
+                new_config,
+                header=f"Profile reloaded on grade selection ({target_line}, {target_grade})",
             )
 
             return self._config["production"]
