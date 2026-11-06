@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Literal, Optional
 
 import cv2
+import numpy as np
 from fastapi import APIRouter, Request
 
 from ..schemas.requests.defect import DefectRequestModel
@@ -18,6 +19,22 @@ from ..utils import get_save_path, save_metadata, pop_baler_from_handoff, Proces
 
 defect_router = APIRouter()
 logger = ProcessLogger("DefectService")
+
+
+def _simplify_polygon(polygon: np.ndarray) -> Optional[list[list[int]]]:
+    if len(polygon) < 3:
+        return None
+
+    simplified = cv2.approxPolyDP(polygon, epsilon=1.0, closed=True)
+    if len(simplified) >= 3:
+        polygon = simplified.reshape(-1, 2)
+
+    max_points = 500
+    if len(polygon) > max_points:
+        indices = np.linspace(0, len(polygon), max_points, endpoint=False, dtype=int)
+        polygon = polygon[indices]
+
+    return polygon.astype(int).tolist()
 
 
 @defect_router.post(
@@ -128,7 +145,8 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
                             class_id=seg.class_id,
                             class_name=seg.class_name,
                             confidence=seg.confidence,
-                            bbox=list(seg.bboxes_xyxy)
+                            bbox=list(seg.bboxes_xyxy),
+                            polygon=_simplify_polygon(seg.polygon)
                         )
                     )
 
@@ -147,7 +165,8 @@ def detect_fault(request: DefectRequestModel, fastapi_request: Request):
                             class_id=cls.class_id,
                             class_name=cls.class_name,
                             confidence=cls.confidence,
-                            bbox=list(region.bboxes_xyxy)
+                            bbox=list(region.bboxes_xyxy),
+                            polygon=_simplify_polygon(region.polygon)
                         )
                     )
 

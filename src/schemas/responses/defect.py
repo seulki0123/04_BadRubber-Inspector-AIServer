@@ -12,6 +12,7 @@ class DetectionItem(BaseModel):
     class_name: str
     confidence: float
     bbox: List[int]
+    polygon: Optional[List[List[int]]] = None
 
     model_config = {
         "populate_by_name": True

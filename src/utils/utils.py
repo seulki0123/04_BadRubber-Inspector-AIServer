@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
@@ -24,13 +25,16 @@ def save_metadata(
     response_data: BaseModel,
     save_path: str
 ) -> str:
+    content = json.dumps(response_data.model_dump(by_alias=True), ensure_ascii=False, indent=4)
+    # Keep bbox and each polygon coordinate pair on one line.
+    content = re.sub(
+        r"\[\n +(-?\d+(?:,\n +-?\d+)+)\n *\]",
+        lambda match: "[" + " ".join(match[1].split()) + "]",
+        content,
+    )
+
     with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(
-            response_data.model_dump(by_alias=True),
-            f,
-            ensure_ascii=False,
-            indent=4
-        )
+        f.write(content)
 
     return save_path
 
