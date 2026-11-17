@@ -29,7 +29,7 @@ def _simplify_polygon(polygon: np.ndarray) -> Optional[list[list[int]]]:
     if len(simplified) >= 3:
         polygon = simplified.reshape(-1, 2)
 
-    max_points = 500
+    max_points = 200
     if len(polygon) > max_points:
         indices = np.linspace(0, len(polygon), max_points, endpoint=False, dtype=int)
         polygon = polygon[indices]
